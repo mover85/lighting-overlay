@@ -1,0 +1,31 @@
+
+body {
+	margin: 0;
+	background-color: #00ff00;
+}
+
+#nowPlaying {
+	position: absolute;
+	top: 680px;
+	left: 25px;
+}
+
+#container {
+	position: absolute;
+	width: 1920px;
+	height: 1080px;
+	overflow: hidden;
+  font-family: "puffin-display", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+#hashtag {
+	position: absolute;
+	top: 18px;
+	left: 24px;
+	font-size: 32px;
+	font-weight: 700;
+	color: white;
+	opacity: 0;
+}

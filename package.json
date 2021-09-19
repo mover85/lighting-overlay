@@ -1,0 +1,84 @@
+{
+  "name": "lighting-overlay",
+  "version": "0.0.0",
+  "description": "",
+  "homepage": "",
+  "author": {
+    "name": "Aaron Collins",
+    "email": "mymover85@xtra.co.nz"
+  },
+  "scripts": {
+    "start:dashboard": "npx parcel src/dashboard/live-controls.html --dist-dir ./ --public-url ./ --target dashboard",
+    "start:graphics": "npx parcel src/graphics/index.html --dist-dir ./ --public-url ./ --target graphics",
+    "start:extension": "npx parcel watch src/extension/index.js --dist-dir ./ --target extension",
+    "build:dashboard": "npx parcel build src/dashboard/live-controls.html --dist-dir ./ --public-url ./ --target dashboard",
+    "build:graphics": "npx parcel build src/graphics/index.html --dist-dir ./ --public-url ./ --target graphics",
+    "build:extension": "npx parcel build src/extension/index.js --dist-dir ./ --target extension"
+  },
+  "browserslist": "last 2 chrome versions",
+  "targets": {
+    "dashboard": {
+      "context": "browser"
+    },
+    "graphics": {
+      "context": "browser"
+    },
+    "extension": {
+      "context": "node"
+    }
+  },
+  "files": [
+    "dashboard",
+    "graphics",
+    "extension.js",
+    "extension"
+  ],
+  "keywords": [
+    "nodecg-bundle"
+  ],
+  "nodecg": {
+    "compatibleRange": "^1.1.1",
+    "dashboardPanels": [
+      {
+        "name": "live controls",
+        "title": "Live Controls",
+        "file": "live-controls.html",
+        "headerColor": "#525F78",
+        "fullbleed": true
+      }
+    ],
+    "graphics": [
+      {
+        "file": "index.html",
+        "width": 1920,
+        "height": 1080
+      }
+    ],
+    "assetCategories": [
+      {
+        "name": "albumart",
+        "title": "Album art",
+        "allowedTypes": ["jpg", "jpeg", "gif", "png"]
+      }
+    ]
+  },
+  "repository": "https://github.com/nodecg/nodecg.git",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@polymer/iron-icon": "^3.0.1",
+    "@polymer/iron-icons": "^3.0.1",
+    "@polymer/iron-image": "^3.0.2",
+    "@polymer/paper-button": "^3.0.1",
+    "@polymer/paper-input": "^3.2.1",
+    "@polymer/polymer": "^3.4.1",
+    "@webcomponents/webcomponentsjs": "^2.5.0",
+    "@wordpress/autop": "^3.2.1",
+    "gsap": "^3.7.0",
+    "queue": "^6.0.2",
+    "twemoji": "^13.1.0",
+    "twitter-api-v2": "^1.1.1"
+  },
+  "devDependencies": {
+    "parcel": "^2.0.0-rc.0"
+  }
+}
