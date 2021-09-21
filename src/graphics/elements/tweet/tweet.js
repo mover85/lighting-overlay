@@ -80,10 +80,6 @@ import logo from 'url:./img/twitter.svg';
 		}
 
 		imagesChanged() {
-			if (!this._showing) {
-				return;
-			}
-
 			const self = this;
 
 			this.imagesTl.clear();
@@ -192,7 +188,7 @@ import logo from 'url:./img/twitter.svg';
 		
 					#tweetBody {
 						background-color: rgba(0,0,0,0.75);
-						padding: 10px 14px;
+						padding: 14px;
 						position: relative;
 						transform: translateY(-100%);
 					}
@@ -239,10 +235,10 @@ import logo from 'url:./img/twitter.svg';
 		
 					#logo {
 						position: absolute;
-						width: 64px;
-						height: 64px;
-						right: 0;
-						top: -2px;
+						width: 48px;
+						height: 48px;
+						right: 14px;
+						top: 16px;
 					}
 		
 					#line {
