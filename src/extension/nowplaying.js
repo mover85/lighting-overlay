@@ -38,7 +38,7 @@ export default (nodecg) => {
 		if (nowPlayingPaused.value === isActive) {
 			return;
 		}
-		
+
 		nowPlayingPaused.value = isActive;
 	});
 

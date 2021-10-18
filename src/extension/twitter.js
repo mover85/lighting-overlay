@@ -93,7 +93,7 @@ class Stream {
 		// Add my search rule
 		try {
 			await this.twitter.v2.updateStreamRules({
-				add: [{'value': 'cat has:media', 'tag': 'cats with media'}],
+				add: [{'value': '#millarstlights', 'tag': 'lighting hashtag'}],
 			});
 		} catch(e) {
 			this.handleError(e);
