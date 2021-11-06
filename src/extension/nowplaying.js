@@ -39,18 +39,24 @@ export default (nodecg) => {
 			return;
 		}
 
+		if (isActive) {
+			nodecg.log.info('NowPlaying is now paused.');
+		} else {
+			nodecg.log.info('NowPlaying has now resumed.');
+		}
+
 		nowPlayingPaused.value = isActive;
 	});
 
 	nodecg.listenFor('nowPlaying', (track) => {
 		const imgData = albumart.value.filter(
 			(value) => value.name === track.album.toLowerCase()
-				.replace(' ', '_')
+				.replaceAll(' ', '_')
 		);
 
 		let artUrl = '';
-
 		if (imgData.length) {
+			nodecg.log.debug('Found image for ' + track.album + '.');
 			artUrl = imgData[0].url;
 		}
 

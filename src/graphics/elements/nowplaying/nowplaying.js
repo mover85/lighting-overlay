@@ -230,7 +230,7 @@ import cover from 'url:./img/default_album_cover.jpg';
 						padding: 1.2em 2em 1em 1em;
 						color: #E4E4E4;
 						white-space: nowrap;
-						max-width: 400px;
+						max-width: 500px;
 						box-sizing: border-box;
 						transform: translateX(-100%);
 					}
@@ -247,10 +247,10 @@ import cover from 'url:./img/default_album_cover.jpg';
 						font-size: 20px;
 						line-height: 22px;
 						transform-origin: left;
-						margin: 0 0 0.5em 0;
+						margin: 0 0 0.25em 0;
 					}
 
-					#artist {
+					#album {
 						font-size: 18px;
 						line-height: 22px;
 						transform-origin: left;
