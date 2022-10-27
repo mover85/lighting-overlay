@@ -1,185 +1,118 @@
-import { PolymerElement, html } from '@polymer/polymer';
-import '@polymer/paper-button';
+import { html } from 'lit';
+import { component, useCallback } from 'haunted';
+import { classMap } from 'lit/directives/class-map';
+import { useReplicant } from '../../../hooks/use-replicant';
 import './dash-twitter-tweet';
+import '@material/mwc-button';
 
-(() => {
-	const streamConnected = nodecg.Replicant('streamConnected');
-	const streamPaused = nodecg.Replicant('streamPaused');
-	const tweetDuration = nodecg.Replicant('tweetDuration');
-	const tweetHold = nodecg.Replicant('tweetHold');
+/**
+ * @customElement
+ * @polymer
+ */
+const Twitter = () => {
+  const [isConnected] = useReplicant('streamConnected', false);
+  const [isPaused] = useReplicant('streamPaused', false);
+  const [onHold] = useReplicant('tweetHold', false);
+  const [tweetDuration, setDuration] = useReplicant('tweetDuration', 10);
 
-	/**
-	 * @customElement
-	 * @polymer
-	 */
-	class DashTwitter extends PolymerElement {
-		static get is() {
-			return 'dash-twitter';
-		}
+  const stream = useCallback(() => {
+    nodecg.sendMessage('startTweetStream');
+  }, []);
 
-		static get properties() {
-			return {};
-		}
+  const stop = useCallback(() => {
+    nodecg.sendMessage('stopTweetStream');
+  }, []);
 
-		ready() {
-			super.ready();
+  const pause = useCallback(() => {
+    nodecg.sendMessage('pauseTweetStream');
+  }, []);
 
-			streamConnected.once('declared', () => {
-				this.$.stop.setAttribute('disabled', 'true');
-			});
-	
-			streamPaused.once('declared', () => {
-				this.$.resume.setAttribute('disabled', 'true');
-			});
-	
-			streamConnected.on('change', newVal => {
-				if (newVal) {
-					this.$.stream.setAttribute('disabled', 'true');
-					this.$.stop.removeAttribute('disabled');
-				} else {
-					this.$.stop.setAttribute('disabled', 'true');
-					this.$.stream.removeAttribute('disabled');
-				}
-			});
+  const resume = useCallback(() => {
+    nodecg.sendMessage('resumeTweetStream');
+  }, []);
 
-			streamPaused.on('change', newVal => {
-				if (newVal) {
-					this.$.seven.removeAttribute('disabled');
-					this.$.fifteen.removeAttribute('disabled');
-					this.$.thirty.removeAttribute('disabled');
-					this.$.pause.setAttribute('disabled', 'true');
-					this.$.resume.removeAttribute('disabled');
-				} else {
-					this.$.seven.setAttribute('disabled', 'true');
-					this.$.fifteen.setAttribute('disabled', 'true');
-					this.$.thirty.setAttribute('disabled', 'true');
-					this.$.pause.removeAttribute('disabled');
-					this.$.resume.setAttribute('disabled', 'true');
-				}
-			});
+  const hold = useCallback(() => {
+    nodecg.sendMessage('holdTweetToggle', !onHold);
+  }, [onHold]);
 
-			tweetHold.on('change', newVal => {
-				if (newVal) {
-					this.$.seven.removeAttribute('disabled');
-					this.$.fifteen.removeAttribute('disabled');
-					this.$.thirty.removeAttribute('disabled');
-					this.$.pause.setAttribute('disabled', 'true');
-					this.$.resume.setAttribute('disabled', 'true');
-				} else {
-					if (!streamPaused.value) {
-						this.$.seven.setAttribute('disabled', 'true');
-						this.$.fifteen.setAttribute('disabled', 'true');
-						this.$.thirty.setAttribute('disabled', 'true');
-						this.$.pause.removeAttribute('disabled');
-						return;
-					}
+  const duration = useCallback((e) => {
+    setDuration(parseInt(e.target.getAttribute('data-duration'), 10));
+  }, []);
 
-					this.$.resume.removeAttribute('disabled');
-				}
-			});
-		}
+  return html`
+    <style>
+      :host {
+        display: block;
+      }
 
-		stream() {
-			nodecg.sendMessage('startTweetStream');
-		}
+      .row {
+        display: var(--layout_-_display);
+      }
 
-		stop() {
-			nodecg.sendMessage('stopTweetStream');
-		}
+      .row :last-child {
+        margin-right: 0;
+      }
 
-		pause() {
-			nodecg.sendMessage('pauseTweetStream');
-		}
+      .row-bottom {
+        margin-top: 0.5em;
+      }
 
-		resume() {
-			nodecg.sendMessage('resumeTweetStream');
-		}
+      mwc-button {
+        flex: 1;
+        min-width: 1px;
+        --mdc-theme-on-primary: white;
+        --mdc-ripple-focus-opacity: 0;
+        margin-right: 0.5em;
+      }
 
-		hold(e) {
-			nodecg.sendMessage('holdTweetToggle', e.target.hasAttribute('active'));
-		}
-	
-		duration(e) {
-			tweetDuration.value = parseInt(e.target.getAttribute('data-duration'), 10);
-		}
-	
-		static get template() {
-			return html`
-				<style>
-					:host {
-						display: block;
-					}
+      .resume {
+        --mdc-theme-primary: #5ba664;
+      }
 
-					paper-button {
-						flex: 1;
-						min-width: 1px;
-					}
+      .pause,
+      .stop {
+        --mdc-theme-primary: #c9513e;
+      }
 
-					#resume {
-						--paper-button: {
-							color: white;
-							background-color: #5BA664;
-						};
-					}
+      .stream,
+      .hold,
+      .row-bottom {
+        --mdc-theme-primary: #645ba6;
+      }
 
-					#pause,
-					#stop {
-						--paper-button: {
-							color: white;
-							background-color: #C9513E;
-						};
-					}
+      .toggle.active {
+        --mdc-theme-primary: #928bc1;
+      }
 
-					#seven,
-					#pause,
-					#stream {
-						margin-left: 0;
-					}
+      img.emoji {
+        height: 1em;
+        width: 1em;
+        margin: 0 .05em 0 .1em;
+        vertical-align: -0.1em;
+      }
+    </style>
 
-					#thirty,
-					#stop,
-					#hold {
-						margin-right: 0;
-					}
+    <div class="row">
+      <mwc-button class="stream" ?disabled="${isConnected}" raised @click="${() => stream()}" label="Stream"></mwc-button>
+      <mwc-button class="stop" ?disabled="${!isConnected}" raised @click="${() => stop()}" label="Stop"></mwc-button>
+    </div>
 
-					#stream,
-					#hold,
-					paper-button[data-duration] {
-						--paper-button: {
-							color: white;
-							background-color: #645BA6;
-						};
-					}
+    <dash-twitter-tweet></dash-twitter-tweet>
 
-					img.emoji {
-						height: 1em;
-						width: 1em;
-						margin: 0 .05em 0 .1em;
-						vertical-align: -0.1em;
-					}
-				</style>
+    <div class="row">
+      <mwc-button class="pause" ?disabled="${isPaused || onHold}" raised @click="${() => pause()}" label="Pause"></mwc-button>
+      <mwc-button class="resume" ?disabled="${!isPaused || onHold}" raised @click="${() => resume()}" label="Resume"></mwc-button>
+      <mwc-button class="hold toggle ${classMap({ active: onHold })}" raised @click="${() => hold()}" label="Hold"></mwc-button>
+    </div>
 
-				<div style="display: flex;">
-					<paper-button id="stream" raised on-tap="stream">Stream</paper-button>
-					<paper-button id="stop" raised on-tap="stop">Stop</paper-button>
-				</div>
+    <div class="row-bottom row">
+      <mwc-button class="ten toggle ${classMap({ active: tweetDuration === 10 })}" ?disabled="${!onHold && !isPaused}" raised data-duration="10" @click="${(e) => duration(e)}" label="10 Seconds"></mwc-button>
+      <mwc-button class="fifteen toggle ${classMap({ active: tweetDuration === 15 })}" ?disabled="${!onHold && !isPaused}" raised data-duration="15" @click="${(e) => duration(e)}" label="15 Seconds"></mwc-button>
+      <mwc-button class="thirty toggle ${classMap({ active: tweetDuration === 30 })}" ?disabled="${!onHold && !isPaused}" raised data-duration="30" @click="${(e) => duration(e)}" label="30 Seconds"></mwc-button>
+    </div>
+  `;
+};
 
-				<dash-twitter-tweet></dash-twitter-tweet>
+const DashTwitter = component(Twitter);
 
-				<div style="display: flex;">
-					<paper-button id="pause" raised on-tap="pause">Pause</paper-button>
-					<paper-button id="resume" raised on-tap="resume">Resume</paper-button>
-					<paper-button id="hold" toggles raised on-tap="hold">Hold</paper-button>
-				</div>
-
-				<div style="display: flex; margin-top: 8px;">
-					<paper-button id="seven" raised data-duration="7" on-tap="duration">7 Seconds</paper-button>
-					<paper-button id="fifteen" raised data-duration="15" on-tap="duration">15 Seconds</paper-button>
-					<paper-button id="thirty" raised data-duration="30" on-tap="duration">30 Seconds</paper-button>
-				</div>
-			`;
-		}
-	}
-
-	customElements.define(DashTwitter.is, DashTwitter);
-})();
+customElements.define('dash-twitter', DashTwitter);

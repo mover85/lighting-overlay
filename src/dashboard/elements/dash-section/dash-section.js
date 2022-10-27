@@ -1,79 +1,51 @@
-import { PolymerElement, html } from '@polymer/polymer';
+import { html } from 'lit';
 import '@polymer/iron-icons/social-icons';
 import '@polymer/iron-icons/av-icons';
+import { component } from 'haunted';
 
 /**
  * @customElement
  * @polymer
  */
-class DashSection extends PolymerElement {
-	static get is() {
-		return 'dash-section';
-	}
+const Section = ({ icon, label }) => html`
+  <style>
+    :host {
+      display: var(--layout-vertical_-_display);
+      flex-direction: var(--layout-vertical_-_flex-direction);
+    }
 
-	static get properties() {
-		return {
-			icon: String,
-			label: String
-		};
-	}
+    .header {
+      color: var(--dash-section-color, black);
+      margin-bottom: 12px;
+      display: var(--layout-horizontal_-_display);
+      flex-direction: var(--layout-horizontal_-_flex-direction);
+      align-items: var(--layout-center-center_-_align-items);
+      justify-content: var(--layout-center-center_-_justify-content);
+    }
 
-	static get template() {
-		return html`
-			<style>
-			:host {
-				@apply --layout-vertical;
-			}
+    .icon {
+      width: 36px;
+      height: 36px;
+      margin-right: 4px;
+    }
 
-			:host(:not(:last-child)) {
-				margin-bottom: 36px;
-			}
+    .label {
+      font-weight: 900;
+      font-size: 36px;
+      text-transform: uppercase;
+    }
+  </style>
 
-			#header {
-				color: var(--dash-section-color, black);
-				margin-bottom: 12px;
-				@apply --layout-horizontal;
-				@apply --layout-center;
-				@apply --layout-flex-none;
-			}
+  <div class="header">
+    <iron-icon class="icon" icon="${icon}"></iron-icon>
+    <div class="label">${label}</div>
+  </div>
 
-			#icon {
-				width: 36px;
-				height: 36px;
-				margin-right: 4px;
-			}
+  <slot></slot>
+`;
 
-			#label {
-				font-weight: 900;
-				font-size: 36px;
-				text-transform: uppercase;
-			}
+const DashSection = component(Section, {
+  observedAttributes: ['icon', 'label'],
+});
 
-			#leftWing {
-				margin-right: 20px;
-			}
-
-			#rightWing {
-				margin-left: 20px;
-			}
-
-			.wing {
-				background-color: var(--dash-section-color, black);
-				height: 1px;
-				@apply --layout-flex;
-			}
-		</style>
-
-		<div id="header">
-			<div id="leftWing" class="wing"></div>
-			<iron-icon id="icon" icon="[[icon]]"></iron-icon>
-			<div id="label">[[label]]</div>
-			<div id="rightWing" class="wing"></div>
-		</div>
-
-		<slot></slot>
-		`;
-	}
-}
-
-customElements.define(DashSection.is, DashSection);
+customElements.define('dash-section', DashSection);

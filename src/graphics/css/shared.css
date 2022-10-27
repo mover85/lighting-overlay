@@ -4,13 +4,13 @@ body {
 	background-color: #00ff00;
 }
 
-#nowPlaying {
+.nowPlaying {
 	position: absolute;
 	top: 680px;
 	left: 25px;
 }
 
-#container {
+.container {
 	position: absolute;
 	width: 1920px;
 	height: 1080px;
@@ -20,7 +20,7 @@ body {
   font-style: normal;
 }
 
-#hashtag {
+.hashtag {
 	position: absolute;
 	top: 18px;
 	left: 24px;

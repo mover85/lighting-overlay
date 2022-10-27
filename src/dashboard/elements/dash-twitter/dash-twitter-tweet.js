@@ -1,194 +1,188 @@
-import { PolymerElement, html } from '@polymer/polymer';
+import { html } from 'lit';
+import { when } from 'lit/directives/when';
+import { map } from 'lit/directives/map';
+import { unsafeHTML } from 'lit/directives/unsafe-html';
+import { component, useEffect, useState } from 'haunted';
+import { useReplicant } from '../../../hooks/use-replicant';
 
-(function () {
-	'use strict';
+import '@polymer/iron-image/iron-image';
 
-	const tweet = nodecg.Replicant('tweet');
+const TwitterTweet = () => {
+  const [tweet] = useReplicant('tweet', {
+    avatarUrl: '',
+    name: '',
+    screenName: '',
+    createdAt: null,
+    id: null,
+    images: [],
+  });
+  const [profileUrl, setProfileUrl] = useState('');
+  const [tweetUrl, setTweetUrl] = useState('');
+  const [imageCount, setImageCount] = useState(0);
+  const {
+    screenName,
+    id,
+    name,
+    avatarUrl,
+    body,
+    images,
+  } = tweet;
 
-	class DashTwitterTweet extends PolymerElement {
-		static get is() {
-			return 'dash-twitter-tweet';
-		}
+  useEffect(
+    () => setProfileUrl(`https://twitter.com/${screenName}`),
+    [screenName],
+  );
 
-		static get properties() {
-			return {
-				profileUrl: {
-					type: String,
-					computed: 'computeProfileUrl(screenName)'
-				},
-				tweetUrl: {
-					type: String,
-					computed: 'computeTweetUrl(profileUrl, id)'
-				},
-				images: Array,
-				screenName: String,
-				name: String,
-				avatarUrl: String,
-				createdAt: String
-			};
-		}
+  useEffect(
+    () => setTweetUrl(`${profileUrl}/status/${id}`),
+    [profileUrl, id],
+  );
 
-		computeProfileUrl(screenName) {
-			return `https://twitter.com/${screenName}`;
-		}
+  useEffect(
+    () => {
+      setImageCount(images.length);
+    },
+    [images],
+  );
 
-		computeTweetUrl(profileUrl, id) {
-			return `${profileUrl}/status/${id}`;
-		}
+  return html`
+    <style>
+    :host {
+      display: var(--layout-vertical_-_display);
+      flex-direction: var(--layout-vertical_-_flex-direction);
+      margin-bottom: 10px;
+      margin-top: 16px;
+      position: relative;
+    }
 
-		computePhotoOrPhotos(numPhotos) {
-			return numPhotos > 1 ? 'photos' : 'photo';
-		}
+    a {
+      text-decoration: none;
+      color: black;
+    }
 
-		computeIndexPlusOne(index) {
-			return index + 1;
-		}
+    a:hover {
+      color: #2b7bb9;
+    }
 
-		ready() {
-			super.ready();
+    .tweet-wrapper {
+      position: relative;
+      height: 10.5em;
+    }
 
-			tweet.on('change', newVal => {
-				if (typeof newVal !== 'object') {
-					return;
-				}
+    .tweet {
+      display: var(--layout-vertical_-_display);
+      flex-direction: var(--layout-vertical_-_flex-direction);
+      margin-left: 58px;
+    }
 
-				this.avatarUrl = newVal.avatarUrl;
-				this.name = newVal.name;
-				this.screenName = newVal.screenName;
-				this.images = newVal.images;
-				this.id = newVal.id;
-				this.createdAt = newVal.createdAt;
-				this.$.body.innerHTML = newVal.body;
-			});
-		}
+    .tweet header {
+      display: var(--layout-vertical_-_display);
+      margin-bottom: 0.5em;
+      height: 1.25em;
+      justify-content: var(--layout-justified_-_justify-content);
+      align-items: var(--layout-center_-_align-items);
+    }
 
-		static get template() {
-			return html`
-			<style>
-			:host {
-				@apply --layout-vertical;
-				margin-bottom: 10px;
-				margin-top: 16px;
-				position: relative;
-			}
+    .avatar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 3px;
+    }
 
-			#tweetWrapper {
-				@apply --layout-horizontal;
-				position: relative;
-			}
+    .tweet-link {
+      flex-shrink: 0;
+    }
 
-			#tweet {
-				@apply --layout-flex;
-				@apply --layout-vertical;
-				margin-left: 58px;
-			}
+    .profile-link {
+      word-break: break-word;
+      word-wrap: break-word;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-right: 0.5em;
+    }
 
-			#avatar {
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 48px;
-				height: 48px;
-				border-radius: 3px;
-				margin-top: 5px;
-			}
+    .name {
+      font-weight: bold;
+      font-size: 16px;
+    }
 
-			#profileLink {
-				word-break: break-word;
-				word-wrap: break-word;
-				display: block;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
+    .screen-name {
+      font-size: 14px;
+    }
 
-			#profileLink:hover {
-				text-decoration: none;
-			}
+    .body {
+      height: 7em;
+      overflow-y: auto;
+    }
 
-			#profileLink:hover #name {
-				color: #2b7bb9;
-				text-decoration: underline;
-			}
+    .media {
+      position: absolute;
+      bottom: 0;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+    }
 
-			#name {
-				color: black;
-				font-weight: bold;
-				font-size: 16px;
-			}
+    .media a {
+      font-size: 16px;
+      display: inline-block;
+      margin-bottom: -6px;
+    }
 
-			#screenName {
-				color: #888;
-				font-size: 14px;
-			}
+    .link {
+      color: #3FC1F1;
+    }
 
-			#body {
-				height: 100px;
-				overflow-y: auto;
-			}
+    .link.orange {
+      color: #F47425;
+    }
 
-			#media {
-				position: absolute;
-				bottom: 4px;
-				text-align: center;
-				width: 100%;
-				display: flex;
-				justify-content: center;
-				align-items: baseline;
-			}
+    img.emoji {
+      height: 1em;
+      width: 1em;
+      margin: 0 .05em 0 .1em;
+      vertical-align: -0.1em;
+    }
+  </style>
 
-			#media a {
-				font-size: 16px;
-				display: inline-block;
-				margin-bottom: -6px;
-			}
+  <div class="tweet-wrapper">
+    <div class="tweet">
+    ${when(name, () => html`
+      <header>
+        <a class="profile-link" href="${profileUrl}" target="_blank">
+          <iron-image class="avatar" src="${avatarUrl}" sizing="contain" fade></iron-image>
+          <span class="name">${name}</span>
+          <span class="screen-name">@${screenName}</span>
+        </a>
+        <a class="tweet-link" href="${tweetUrl}" target="_blank">View tweet</a>
+      </header>
 
-			a {
-				text-transform: none;
-			}
+      <div class="body">${unsafeHTML(body)}</div>
+    `, () => html`
+      <p>No tweets to show.</p>
+    `)}
+    </div>
+  </div>
 
-			.link {
-				color: #3FC1F1;
-			}
+  ${when(imageCount > 0, () => html`
+    <div class="media">
+      <b>Tweet has ${imageCount} ${imageCount > 1 ? 'photos' : 'photo'}:&nbsp;</b>
+    ${map(images, (image, index) => html`
+      <a class="imageLink" href="${image}" target="_blank">${index + 1}</a>
+      &nbsp;
+    `)}
+    </div>
+  `)}
+  `;
+};
 
-			.link.orange {
-				color: #F47425;
-			}
+const DashTwitterTweet = component(TwitterTweet);
 
-			img.emoji {
-				height: 1em;
-				width: 1em;
-				margin: 0 .05em 0 .1em;
-				vertical-align: -0.1em;
-			}
-		</style>
-
-		<div id="tweetWrapper">
-			<div id="tweet">
-				<header>
-					<a id="profileLink" href="[[profileUrl]]" target="_blank">
-						<iron-image id="avatar" src="[[avatarUrl]]" sizing="contain" fade></iron-image>
-						<span id="name">[[name]]</span>
-						<span id="screenName">@[[screenName]]</span>
-					</a>
-				</header>
-
-				<div id="body"></div>
-			</div>
-		</div>
-
-		<template is="dom-if" if="[[images.length]]">
-			<div id="media">
-				<b>Tweet has [[images.length]] [[computePhotoOrPhotos(images.length)]]:&nbsp;</b>
-				<template is="dom-repeat" items="[[images]]" as="image">
-					<a class="imageLink" href="[[image]]" target="_blank">[[computeIndexPlusOne(index)]]</a>
-					&nbsp;
-				</template>
-			</div>
-		</template>
-			`;
-		}
-	}
-
-	customElements.define(DashTwitterTweet.is, DashTwitterTweet);
-})();
+customElements.define('dash-twitter-tweet', DashTwitterTweet);

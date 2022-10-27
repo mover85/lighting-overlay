@@ -1,299 +1,266 @@
-import { PolymerElement, html } from '@polymer/polymer';
+import { html } from 'lit';
 import gsap from 'gsap';
+import { unsafeHTML } from 'lit/directives/unsafe-html';
+import { createRef, ref } from 'lit/directives/ref';
+import {
+  component,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'haunted';
+import { useReplicant } from '../../../hooks/use-replicant';
 import '@polymer/iron-image';
-import logo from 'url:./img/twitter.svg';
 
-(function () {
-	'use strict';
+/**
+ * @customElement
+ * @polymer
+ */
+const Tweet = () => {
+  const [tweet] = useReplicant('tweet', {
+    avatarUrl: '',
+    name: '',
+    screenName: '',
+    createdAt: null,
+    id: null,
+    images: [],
+  });
+  const [tweetShowing] = useReplicant('tweetShowing', false);
+  const [imageSrc, setImageSrc] = useState('');
+  const {
+    screenName,
+    name,
+    avatarUrl,
+    body,
+    images,
+  } = tweet;
+  const tl = useRef(gsap.timeline());
+  const imagesTl = useRef(gsap.timeline());
+  const el = useRef(createRef());
 
-	const tweet = nodecg.Replicant('tweet');
-	const tweetShowing = nodecg.Replicant('tweetShowing');
+  useEffect(() => {
+    const context = gsap.context(() => {
+      imagesTl.current.clear();
+      imagesTl.current.resume();
 
-	/**
-	 * @customElement
-	 * @polymer
-	 */
-	class Tweet extends PolymerElement {
-		static get is() {
-			return 'element-tweet';
-		}
+      if (!images || images.length === 0) {
+        imagesTl.current.to('.image', {
+          duration: 0.5,
+          opacity: 0,
+          ease: 'Power1.easeInOut',
+        });
+        imagesTl.current.call(() => {
+          setImageSrc('');
+        }, null, null);
+        return;
+      }
 
-		static get properties() {
-			return {
-				imgPath: {
-					type: String,
-					value: logo,
-				},
-				tl: {
-					type: Object,
-					value: gsap.timeline(),
-					readOnly: true
-				},
-				imagesTl: {
-					type: Object,
-					value: gsap.timeline(),
-					readOnly: true
-				},
-				images: {
-					type: Object,
-					value() {
-						return [];
-					},
-					observer: 'imagesChanged'
-				},
-				name: String,
-				screenName: String,
-				avatarUrl: String,
-				_showing: {
-					type: Boolean,
-					value: false
-				},
-				_initialized: {
-					type: Boolean,
-					value: false
-				}
-			};
-		}
+      if (images.length === 1) {
+        imagesTl.current.repeat(0);
+      } else {
+        imagesTl.current.repeat(-1);
+      }
 
-		ready() {
-			super.ready();
+      images.forEach((url, i) => {
+        imagesTl.current.to('.image', {
+          duration: 0.5,
+          opacity: 0,
+          ease: 'Power1.easeInOut',
+        }, `+=${i * 5}`);
+        imagesTl.current.call(() => {
+          setImageSrc(url);
+        }, null, null);
+        imagesTl.current.to('.image', {
+          duration: 0.5,
+          opacity: 1,
+          ease: 'Power1.easeInOut',
+        });
+      });
 
-			tweet.on('change', newVal => {
-				if (typeof newVal !== 'object') {
-					return;
-				}
+      imagesTl.current.to({}, {
+        duration: 10,
+      });
+    }, el.current.value);
 
-				this.avatarUrl = newVal.avatarUrl;
-				this.name = newVal.name;
-				this.screenName = newVal.screenName;
-				this.images = newVal.images;
-				this.$.message.innerHTML = newVal.body;
-			});
+    return () => context.revert();
+  }, [images]);
 
-			tweetShowing.on('change', newVal => {
-				if (newVal) {
-					this.show();
-				} else {
-					this.hide();
-				}
-			});
-		}
+  const show = useCallback(() => {
+    const context = gsap.context(() => {
+      tl.current.to('.line', {
+        duration: 0.8,
+        width: '100%',
+        ease: 'Power3.easeInOut',
+      });
+      tl.current.to('.tweetBody', {
+        duration: 0.5,
+        y: '0%',
+        ease: 'Power3.easeOut',
+      });
+      tl.current.to('.image', {
+        duration: 1,
+        y: '0%',
+        ease: 'Power3.easeOut',
+      }, '-=0.5');
+    }, el.current.value);
 
-		imagesChanged() {
-			const self = this;
+    return () => context.revert();
+  }, []);
 
-			this.imagesTl.clear();
+  const hide = useCallback(() => {
+    const context = gsap.context(() => {
+      tl.current.to('.image', {
+        duration: 1,
+        y: '100%',
+        ease: 'Power3.easeInt',
+      });
+      tl.current.to('.tweetBody', {
+        duration: 0.5,
+        y: '-100%',
+        ease: 'Power3.easeInt',
+      }, '-=0.88');
+      tl.current.to('.line', {
+        duration: 0.8,
+        width: '0%',
+        ease: 'Power3.easeInOut',
+      });
 
-			if (!this.images || this.images.length === 0) {
-				self.imagesTl.to(self.$.image, {
-					duration: 0.5,
-					opacity: 0,
-					ease: 'Power1.easeInOut'
-				});
-				self.imagesTl.call(() => {
-					self.$.image.src = '';
-				}, null, null);
-				return;
-			} else if (this.images.length === 1) {
-				this.imagesTl.repeat(0);
-			} else {
-				this.imagesTl.repeat(-1);
-			}
+      imagesTl.current.pause();
+    }, el.current.value);
 
-			this.images.forEach((url, i) => {
-				self.imagesTl.to(self.$.image, {
-					duration: 0.5,
-					opacity: 0,
-					ease: 'Power1.easeInOut'
-				}, `+=${i * 5}`);
-				self.imagesTl.call(() => {
-					self.$.image.src = '';
-					self.$.image.src = url;
-				}, null, null);
-				self.imagesTl.to(self.$.image, {
-					duration: 0.5,
-					opacity: 1,
-					ease: 'Power1.easeInOut'
-				});
-			});
+    return () => context.revert();
+  }, []);
 
-			this.imagesTl.to({}, {
-				duration: 7
-			});
-		}
+  useEffect(() => {
+    if (tweetShowing) {
+      show();
+    } else {
+      hide();
+    }
+  }, [tweetShowing, show, hide]);
 
-		show() {
-			if (this._showing) {
-				return;
-			}
+  return html`
+    <style>
+      :host {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        bottom: 88px;
+        right: 88px;
+        width: 500px;
+        color: #E4E4E4;
+        font-size: 24px;
+      }
 
-			this._showing = true;
+      .tweetBody {
+        background-color: rgba(0,0,0,0.75);
+        padding: 14px;
+        position: relative;
+        transform: translateY(-100%);
+      }
 
-			const self = this;
+      .image {
+        width: 100%;
+        height: 500px;
+        transform: translateY(100%);
+      }
 
-			this.tl.to(this.$.line, {
-				duration: 0.8,
-				width: '100%',
-				ease: 'Power3.easeInOut'
-			});
-			this.tl.to(this.$.tweetBody, {
-				duration: 0.5,
-				y: '0%',
-				ease: 'Power3.easeOut'
-			});
-			this.tl.to(this.$.image, {
-				duration: 1,
-				y: '0%',
-				ease: 'Power3.easeOut'
-			}, '-=0.5');
-		}
+      .author {
+        display: flex;
+        align-items: center;
+      }
 
-		hide() {
-			if (!this._showing) {
-				return;
-			}
+      .author-details {
+        display: flex;
+        margin-left: 8px;
+        flex-direction: column;
+        font-size: 90%;
+      }
 
-			this._showing = false;
+      .name {
+        margin: 0;
+        font-weight: 600;
+      }
 
-			this.tl.to(this.$.image, {
-				duration: 1,
-				y: '100%',
-				ease: 'Power3.easeInt'
-			});
-			this.tl.to(this.$.tweetBody, {
-				duration: 0.5,
-				y: '-100%',
-				ease: 'Power3.easeInt'
-			}, '-=0.88');
-			this.tl.to(this.$.line, {
-				duration: 0.8,
-				width: '0%',
-				ease: 'Power3.easeInOut'
-			});
-		}
+      .screen-name {
+        margin: 0;
+        font-size: 80%;
+        color: #9daaa6;
+      }
 
-		static get template() {
-			return html`
-				<style>
-					:host {
-						display: flex;
-						flex-direction: column;
-						position: absolute;
-						bottom: 88px;
-						right: 88px;
-						width: 500px;
-						color: #E4E4E4;
-						font-size: 24px;
-					}
-		
-					#tweetBody {
-						background-color: rgba(0,0,0,0.75);
-						padding: 14px;
-						position: relative;
-						transform: translateY(-100%);
-					}
-		
-					#image {
-						width: 100%;
-						height: 500px;
-						transform: translateY(100%);
-					}
-		
-					#author {
-						display: flex;
-						align-items: center;
-					}
-		
-					#author-details {
-						display: flex;
-						margin-left: 8px;
-						flex-direction: column;
-						font-size: 90%;
-					}
-		
-					#name {
-						margin: 0;
-						font-weight: 600;
-					}
-		
-					#screen-name {
-						margin: 0;
-						font-size: 80%;
-						color: #9daaa6;
-					}
-		
-					#avatar {
-						width: 48px;
-						height: 48px;
-						border-radius: 4px;
-					}
-		
-					#message p {
-						margin-top: 0.5em;
-						margin-bottom: 0.25em;
-					}
-		
-					#logo {
-						position: absolute;
-						width: 48px;
-						height: 48px;
-						right: 14px;
-						top: 16px;
-					}
-		
-					#line {
-						align-self: center;
-						height: 4px;
-						background-color: #ac09ff;
-						width: 0;
-						transform-origin: center;
-						z-index: 1;
-					}
-		
-					.link {
-						color: #3FC1F1;
-					}
-		
-					.link.purple {
-						color: #ac09ff;
-					}
-		
-					s {
-						text-decoration: none;
-					}
-		
-					.cull {
-						overflow: hidden;
-					}
-		
-					img.emoji {
-						height: 1em;
-						width: 1em;
-						margin: 0 .05em 0 .1em;
-						vertical-align: -0.1em;
-					}
-				</style>
-		
-				<div class="cull" style="height: 500px;">
-					<iron-image id="image" sizing="contain" position="bottom" preload fade></iron-image>
-				</div>
-				<div id="line"></div>
-				<div class="cull">
-					<div id="tweetBody">
-						<iron-image id="logo" sizing="contain" preload fade src="[[imgPath]]"></iron-image>
-						<div id="author">
-							<iron-image id="avatar" sizing="contain" preload fade src="[[avatarUrl]]"></iron-image>
-							<div id="author-details">
-								<p id="name">[[name]]</p>
-								<p id="screen-name">@[[screenName]]</p>
-							</div>
-						</div>
-						<div id="message"></div>
-					</div>
-				</div>
-			`;
-		}
-	}
+      .avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 4px;
+      }
 
-	customElements.define(Tweet.is, Tweet);
-})();
+      .message p {
+        margin-top: 0.5em;
+        margin-bottom: 0.25em;
+      }
+
+      .logo {
+        position: absolute;
+        width: 48px;
+        height: 48px;
+        right: 14px;
+        top: 16px;
+      }
+
+      .line {
+        align-self: center;
+        height: 4px;
+        background-color: #ac09ff;
+        width: 0;
+        transform-origin: center;
+        z-index: 1;
+      }
+
+      .link {
+        color: #3FC1F1;
+      }
+
+      .link.purple {
+        color: #ac09ff;
+      }
+
+      s {
+        text-decoration: none;
+      }
+
+      .cull {
+        overflow: hidden;
+      }
+
+      img.emoji {
+        height: 1em;
+        width: 1em;
+        margin: 0 .05em 0 .1em;
+        vertical-align: -0.1em;
+      }
+    </style>
+    <div ${ref(el.current)}>
+      <div class="cull" style="height: 500px;">
+        <iron-image class="image" src="${imageSrc}" sizing="contain" position="bottom" preload fade></iron-image>
+      </div>
+      <div class="line"></div>
+      <div class="cull">
+        <div class="tweetBody">
+          <iron-image class="logo" sizing="contain" preload fade src="${new URL('./img/twitter.svg', import.meta.url)}"></iron-image>
+          <div class="author">
+            <iron-image class="avatar" sizing="contain" preload fade src="${avatarUrl}"></iron-image>
+            <div class="author-details">
+              <p class="name">${name}</p>
+              <p class="screen-name">@${screenName}</p>
+            </div>
+          </div>
+          <div class="message">${unsafeHTML(body)}</div>
+        </div>
+      </div>
+    </div>
+      `;
+};
+
+const TweetElement = component(Tweet);
+
+customElements.define('element-tweet', TweetElement);

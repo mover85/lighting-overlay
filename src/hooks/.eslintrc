@@ -3,6 +3,6 @@
 		"browser": true
 	},
 	"globals": {
-		"nodecg": true
+		"nodecg": true,
 	}
 }

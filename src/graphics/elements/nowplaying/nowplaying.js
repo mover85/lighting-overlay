@@ -1,290 +1,231 @@
-import { PolymerElement, html } from '@polymer/polymer';
+import { html } from 'lit';
 import gsap from 'gsap';
+import { createRef, ref } from 'lit/directives/ref';
 import '@polymer/iron-image';
-import cover from 'url:./img/default_album_cover.jpg';
+import {
+  component, useCallback, useEffect, useRef,
+} from 'haunted';
+import { useReplicant } from '../../../hooks/use-replicant';
 
-(function () {
-	'use strict';
+const getElementContentWidth = (element) => {
+  const styles = window.getComputedStyle(element);
+  const padding = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+  return element.clientWidth - padding;
+};
 
-	const nowPlaying = nodecg.Replicant('nowPlaying');
-	const nowPlayingShowing = nodecg.Replicant('nowPlayingShowing');
+/**
+ * @customElement
+ * @polymer
+ */
+const Nowplaying = () => {
+  const [nowPlaying] = useReplicant('nowPlaying', {
+    artUrl: '',
+    title: '',
+    artist: '',
+    album: '',
+  });
+  const {
+    title,
+    artist,
+    album,
+    artUrl,
+  } = nowPlaying;
+  const [nowPlayingShowing] = useReplicant('nowPlayingShowing', false);
 
-	/**
-	 * @customElement
-	 * @polymer
-	 */
-	class Nowplaying extends PolymerElement {
-		static get is() {
-			return 'element-nowplaying';
-		}
+  const tl = useRef(gsap.timeline());
+  const detailsEl = useRef(createRef());
+  const artEl = useRef(createRef());
+  const lineEl = useRef(createRef());
 
-		static get properties() {
-			return {
-				defaultArtUrl: {
-					type: String,
-					value: cover,
-				},
-				artUrl: {
-					type: String
-				},
-				title: {
-					type: String,
-					value: '',
-					observer: 'titleChanged'
-				},
-				artist: {
-					type: String,
-					value: '',
-					observer: 'artistChanged'
-				},
-				album: {
-					type: String,
-					value: '',
-					observer: 'albumChanged'
-				},
-				duration: {
-					type: Number,
-					value: 15
-				},
-				showing: {
-					type: Boolean,
-					value: false,
-					readOnly: true
-				},
-				tl: {
-					type: Object,
-					value: gsap.timeline(),
-				}
-			};
-		}
+  useEffect(() => {
+    const titleEl = detailsEl.current.value.querySelector('.title');
+    const titleWidth = titleEl.scrollWidth;
+    const maxWidth = getElementContentWidth(detailsEl.current.value);
+    if (titleWidth > maxWidth) {
+      gsap.set(titleEl, { scaleX: maxWidth / titleWidth });
+    } else {
+      gsap.set(titleEl, { scaleX: 1 });
+    }
+  }, [title]);
 
-		ready() {
-			super.ready();
+  useEffect(() => {
+    const artistEl = detailsEl.current.value.querySelector('.artist');
+    const artistWidth = artistEl.scrollWidth;
+    const maxWidth = getElementContentWidth(detailsEl.current.value);
+    if (artistWidth > maxWidth) {
+      gsap.set(artistEl, { scaleX: maxWidth / artistWidth });
+    } else {
+      gsap.set(artistEl, { scaleX: 1 });
+    }
+  }, [artist]);
 
-			nowPlaying.on('change', (newVal) => {
-				if (typeof newVal !== 'object') {
-					return;
-				}
+  useEffect(() => {
+    const albumEl = detailsEl.current.value.querySelector('.album');
+    const albumWidth = albumEl.scrollWidth;
+    const maxWidth = getElementContentWidth(detailsEl.current.value);
+    if (albumWidth > maxWidth) {
+      gsap.set(albumEl, { scaleX: maxWidth / albumWidth });
+    } else {
+      gsap.set(albumEl, { scaleX: 1 });
+    }
+  }, [album]);
 
-				this.artUrl = newVal.artUrl;
-				this.title = newVal.title;
-				this.artist = newVal.artist;
-				this.album = newVal.album;
-			});
+  const show = useCallback(() => {
+    // Prevent first "call" from getting ignored
+    tl.current.to({}, 0.01, { });
 
-			nowPlayingShowing.on('change', (newVal) => {
-				if (newVal) {
-					this.show();
-				} else {
-					this.hide();
-				}
-			});
-		}
+    tl.current.to(lineEl.current.value, {
+      duration: 0.5,
+      height: '100%',
+      ease: 'Power1.easeInOut',
+    });
 
-		titleChanged(newVal) {
-			this.$.title.innerHTML = `&#9834; ${newVal}`;
+    tl.current.add('stuffIn');
 
-			const title = this.$.title;
-			const titleWidth = title.scrollWidth;
-			const maxWidth = this._getElementContentWidth(this.$.details);
-			if (titleWidth > maxWidth) {
-				gsap.set(title, {scaleX: maxWidth / titleWidth});
-			} else {
-				gsap.set(title, {scaleX: 1});
-			}
-		}
+    tl.current.to(artEl.current.value, {
+      duration: 0.4,
+      x: '0%',
+      ease: 'Power1.easeOut',
+    }, 'stuffIn');
 
-		artistChanged() {
-			const artist = this.$.artist;
-			const artistWidth = artist.scrollWidth;
-			const maxWidth = this._getElementContentWidth(this.$.details);
-			if (artistWidth > maxWidth) {
-				gsap.set(artist, {scaleX: maxWidth / artistWidth});
-			} else {
-				gsap.set(artist, {scaleX: 1});
-			}
-		}
+    tl.current.to(detailsEl.current.value, {
+      duration: 0.7,
+      x: '0%',
+      ease: 'Power1.easeOut',
+    }, 'stuffIn');
+  }, []);
 
-		albumChanged() {
-			const album = this.$.album;
-			const albumWidth = album.scrollWidth;
-			const maxWidth = this._getElementContentWidth(this.$.details);
-			if (albumWidth > maxWidth) {
-				gsap.set(album, {scaleX: maxWidth / albumWidth});
-			} else {
-				gsap.set(album, {scaleX: 1});
-			}
-		}
+  const hide = useCallback(() => {
+    tl.current.add('stuffOut');
 
-		show() {
-			if (this.showing) {
-				return;
-			}
+    tl.current.to(artEl.current.value, {
+      duration: 0.4,
+      x: '100%',
+      ease: 'Power1.easeIn',
+    }, 'stuffOut+=0.3');
 
-			this._setShowing(true);
+    tl.current.to(detailsEl.current.value, {
+      duration: 0.7,
+      x: '-100%',
+      ease: 'Power1.easeIn',
+    }, 'stuffOut');
 
-			const self = this;
+    tl.current.to(lineEl.current.value, {
+      duration: 0.5,
+      height: '0%',
+      ease: 'Power1.easeInOut',
+    });
+  }, []);
 
-			// Prevent first "call" from getting ignored
-			this.tl.to({}, 0.01, {});
+  useEffect(() => {
+    if (nowPlayingShowing) {
+      show();
+    } else {
+      hide();
+    }
+  }, [nowPlayingShowing, show, hide]);
 
-			this.tl.to(this.$.line, {
-				duration: 0.5,
-				height: '100%',
-				ease: 'Power1.easeInOut'
-			});
+  return html`
+    <style>
+      :host {
+        display: flex;
+        position: absolute;
+        bottom: 88px;
+        left: 88px;
+      }
 
-			this.tl.add('stuffIn');
+      .fullHeight {
+        height: 120px;
+      }
 
-			this.tl.to(this.$.art, {
-				duration: 0.4,
-				x: '0%',
-				ease: 'Power1.easeOut'
-			}, 'stuffIn');
+      .cull {
+        overflow: hidden;
+      }
 
-			this.tl.to(this.$.details, {
-				duration: 0.7,
-				x: '0%',
-				ease: 'Power1.easeOut'
-			}, 'stuffIn');
-		}
+      .centerFlex {
+        display: flex;
+        align-items: center;
+      }
 
-		hide() {
-			if (!this.showing) {
-				return;
-			}
+      .background {
+        background-color: rgba(0, 0, 0, 0.75);
+      }
 
-			this._setShowing(false);
+      .art {
+        width: 120px;
+        background-position: center;
+        background-size: contain;
+        background-color: #D3C9C9;
+        transform: translateX(100%);
+      }
 
-			this.tl.add('stuffOut');
+      .line {
+        width: 3px;
+        height: 0;
+        background-color: #ac09ff;
+      }
 
-			this.tl.to(this.$.art, {
-				duration: 0.4,
-				x: '100%',
-				ease: 'Power1.easeIn'
-			}, 'stuffOut+=0.3');
+      .details {
+        display: flex;
+        flex-direction: column;
+        padding: 1.2em 2em 1em 1em;
+        color: #E4E4E4;
+        white-space: nowrap;
+        max-width: 500px;
+        box-sizing: border-box;
+        transform: translateX(-100%);
+      }
 
-			this.tl.to(this.$.details, {
-				duration: 0.7,
-				x: '-100%',
-				ease: 'Power1.easeIn'
-			}, 'stuffOut');
+      .title {
+        font-size: 30px;
+        line-height: 34px;
+        transform-origin: left;
+        font-weight: 600;
+        margin: 0 0 0.25em 0;
+      }
 
-			this.tl.to(this.$.line, {
-				duration: 0.5,
-				height: '0%',
-				ease: 'Power1.easeInOut'
-			});
-		}
+      .artist {
+        font-size: 20px;
+        line-height: 22px;
+        transform-origin: left;
+        margin: 0 0 0.25em 0;
+      }
 
-		_getElementContentWidth(element) {
-			const styles = window.getComputedStyle(element);
-			const padding = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
-			return element.clientWidth - padding;
-		}
+      .album {
+        font-size: 18px;
+        line-height: 22px;
+        transform-origin: left;
+        margin: 0;
+      }
+    </style>
 
-		static get template() {
-			return html`
-				<style>
-					:host {
-						display: flex;
-						position: absolute;
-						bottom: 88px;
-						left: 88px;
-					}
-
-					.fullHeight {
-						height: 120px;
-					}
-
-					.cull {
-						overflow: hidden;
-					}
-
-					.centerFlex {
-						display: flex;
-						align-items: center;
-					}
-
-					.background {
-						background-color: rgba(0, 0, 0, 0.75);
-					}
-
-					#art {
-						width: 120px;
-						background-position: center;
-						background-size: contain;
-						background-color: #D3C9C9;
-						transform: translateX(100%);
-					}
-
-					#line {
-						width: 3px;
-						height: 0;
-						background-color: #ac09ff;
-					}
-
-					#details {
-						display: flex;
-						flex-direction: column;
-						padding: 1.2em 2em 1em 1em;
-						color: #E4E4E4;
-						white-space: nowrap;
-						max-width: 500px;
-						box-sizing: border-box;
-						transform: translateX(-100%);
-					}
-
-					#title {
-						font-size: 30px;
-						line-height: 34px;
-						transform-origin: left;
-						font-weight: 600;
-						margin: 0 0 0.25em 0;
-					}
-
-					#artist {
-						font-size: 20px;
-						line-height: 22px;
-						transform-origin: left;
-						margin: 0 0 0.25em 0;
-					}
-
-					#album {
-						font-size: 18px;
-						line-height: 22px;
-						transform-origin: left;
-						margin: 0;
-					}
-				</style>
-
-        <div class="cull fullHeight">
-					<iron-image
-						id="art"
-						class="fullHeight"
-						sizing="contain"
-						src="[[artUrl]]"
-            placeholder="[[defaultArtUrl]]"
-						preload
-						fade
-					>
-					</iron-image>
+    <div class="cull fullHeight">
+      <iron-image
+        class="art fullHeight"
+        sizing="contain"
+        src="${artUrl}"
+        placeholder="${new URL('./img/default_album_cover.jpg', import.meta.url)}"
+        preload
+        fade
+        ${ref(artEl.current)}
+      >
+      </iron-image>
+    </div>
+    <div class="cull fullHeight centerFlex">
+      <div class="line" ${ref(lineEl.current)}></div>
+    </div>
+    <div class="cull">
+      <div class="details background fullHeight" ${ref(detailsEl.current)}>
+        <div>
+          <p class="title">&#9834; ${title}</p>
+          <p class="artist">${artist}</p>
+          <p class="album">${album}</p>
         </div>
-        <div class="cull fullHeight centerFlex">
-					<div id="line"></div>
-        </div>
-        <div class="cull">
-					<div id="details" class="background fullHeight">
-						<div>
-							<p id="title">[[title]]</p>
-							<p id="artist">[[artist]]</p>
-							<p id="album">[[album]]</p>
-						</div>
-					</div>
-        </div>
-			`;
-		}
-	}
+      </div>
+    </div>
+  `;
+};
 
-	customElements.define(Nowplaying.is, Nowplaying);
-})();
+const NowplayingElement = component(Nowplaying);
+
+customElements.define('element-nowplaying', NowplayingElement);

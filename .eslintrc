@@ -1,18 +1,17 @@
 {
 	"root": true,
-	"extends": [
-		"xo/esnext",
-		"plugin:ava/recommended"
+  "extends": [
+		"airbnb-base",
+		"plugin:react-hooks/recommended"
 	],
-	"plugins": [
-		"ava"
-	],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
 	"rules": {
 		"new-cap": [
 			2,
 			{
 				"capIsNewExceptions": [
-					"Polymer",
 					"MutableData",
 					"nodecg.Replicant",
 					"NodeCG.Replicant",
