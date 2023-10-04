@@ -1,5 +1,4 @@
 import nodecgApiContext from './util/nodecg-api-context';
-import twitter from './twitter';
 import nowplaying from './nowplaying';
 
 export default (nodecg) => {
@@ -8,5 +7,4 @@ export default (nodecg) => {
   nodecgApiContext.set(nodecg);
 
   nowplaying(nodecg);
-  twitter(nodecg);
 };

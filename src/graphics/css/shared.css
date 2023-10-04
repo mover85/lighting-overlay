@@ -19,13 +19,3 @@ body {
   font-weight: 400;
   font-style: normal;
 }
-
-.hashtag {
-	position: absolute;
-	top: 18px;
-	left: 24px;
-	font-size: 32px;
-	font-weight: 700;
-	color: white;
-	opacity: 0;
-}

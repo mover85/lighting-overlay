@@ -46,7 +46,7 @@
     "nodecg-bundle"
   ],
   "nodecg": {
-    "compatibleRange": "^1.1.1",
+    "compatibleRange": "^2.1.0",
     "dashboardPanels": [
       {
         "name": "live controls",
@@ -83,20 +83,16 @@
     "@polymer/iron-icon": "^3.0.1",
     "@polymer/iron-icons": "^3.0.1",
     "@polymer/iron-image": "^3.0.2",
-    "@wordpress/autop": "^3.18.0",
-    "gsap": "^3.11.2",
+    "@wordpress/autop": "^3.42.0",
+    "gsap": "^3.12.2",
     "haunted": "^5.0.0",
-    "leo-profanity": "^1.6.1",
-    "lit": "^2.3.1",
-    "lodash.clone": "^4.5.0",
-    "queue": "^6.0.2",
-    "twemoji": "^14.0.2",
-    "twitter-api-v2": "^1.12.7"
+    "lit": "^2.8.0",
+    "lodash.clone": "^4.5.0"
   },
   "devDependencies": {
-    "eslint": "^8.24.0",
+    "eslint": "^8.50.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "parcel": "^2.7.0"
+    "parcel": "^2.9.3"
   }
 }
